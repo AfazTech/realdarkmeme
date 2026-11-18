@@ -11,6 +11,7 @@ Route::middleware('auth')->group(function(){
  Route::get('/',[DashboardController::class,'index'])->name('dashboard');
  Route::get('/videos',[VideoController::class,'index'])->name('videos.index');
  Route::get('/videos/{video}',[VideoController::class,'show'])->name('videos.show');
+ Route::post('/videos/{video}/caption',[VideoController::class,'caption'])->name('videos.caption');
  Route::post('/videos/{video}/remake',[VideoController::class,'remake'])->name('videos.remake');
  Route::post('/videos/{video}/retry-render',[VideoController::class,'retry'])->name('videos.retry');
  Route::get('/videos/{video}/files/{kind}',[VideoController::class,'file'])->whereIn('kind',['source','poster','output'])->name('videos.file');

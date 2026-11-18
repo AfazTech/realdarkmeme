@@ -40,20 +40,20 @@ class RenderSettings
         foreach(self::schema() as $key=>$def) {
             $val=$data[$key]??null;
             if ($def[1]==='boolean') { $out[$key]=in_array($val,[true,'1',1,'on'],true); continue; }
-            if (!is_scalar($val)) throw ValidationException::withMessages([$key=>'Invalid value.']);
+            if (!is_scalar($val)) throw ValidationException::withMessages([$key=>'Invalid value for '.$def[0].' ('.$key.').']);
             if ($def[1]==='integer' || $def[1]==='number') {
-                if(!is_numeric($val)) throw ValidationException::withMessages([$key=>'Enter a valid number.']);
+                if(!is_numeric($val)) throw ValidationException::withMessages([$key=>'Enter a valid number for '.$def[0].'.']);
                 $v=$def[1]==='integer'?(int)$val:(float)$val;
-                if ($def[1]==='integer' && (string)(int)$val !== (string)$val) throw ValidationException::withMessages([$key=>'An integer is required.']);
-                if ($v<$def[3] || $v>$def[4]) throw ValidationException::withMessages([$key=>'Value is out of range.']);
+                if ($def[1]==='integer' && (string)(int)$val !== (string)$val) throw ValidationException::withMessages([$key=>$def[0].' must be a whole number.']);
+                if ($v<$def[3] || $v>$def[4]) throw ValidationException::withMessages([$key=>$def[0].' must be between '.$def[3].' and '.$def[4].'.']);
                 $out[$key]=$v; continue;
             }
             if ($def[1]==='select') {
-                if(!in_array((string)$val,$def[3],true))throw ValidationException::withMessages([$key=>'Invalid option.']);
+                if(!in_array((string)$val,$def[3],true))throw ValidationException::withMessages([$key=>'Choose a valid option for '.$def[0].'.']);
                 $out[$key]=$key==='output_fps'?(int)$val:(string)$val;continue;
             }
-            if($def[1]==='color' && !preg_match('/^#[A-Fa-f0-9]{6}$/',(string)$val))throw ValidationException::withMessages([$key=>'Enter a valid hex color.']);
-            if(mb_strlen((string)$val)>500)throw ValidationException::withMessages([$key=>'Text is too long.']);
+            if($def[1]==='color' && !preg_match('/^#[A-Fa-f0-9]{6}$/',(string)$val))throw ValidationException::withMessages([$key=>'Enter a valid hex color for '.$def[0].'.']);
+            if(mb_strlen((string)$val)>500)throw ValidationException::withMessages([$key=>$def[0].' is too long.']);
             $out[$key]=trim((string)$val);
         }
         return $out;

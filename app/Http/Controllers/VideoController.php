@@ -17,24 +17,54 @@ class VideoController extends Controller
     return view('videos.index',['videos'=>$q->paginate(18)->withQueryString(),'filter'=>$r->query('status','')]);
  }
  public function show(Video $video){
-    $video->load(['channel','renders.publications.sender','currentRender']);
+    $video->load(['channel','renders.publications.sender','currentRender.publications']);
     return view('videos.show',['video'=>$video,'schema'=>RenderSettings::schema(),'global'=>RenderSettings::current(),'initial'=>array_replace(RenderSettings::current(),$video->overrides??[])]);
  }
+ /**
+  * Editing a caption does not change the video overlay or start a render.
+  * Approved versions are immutable: sender deliveries must retain their snapshot.
+  */
+ public function caption(Request $request, Video $video)
+ {
+     $data=$request->validate(['caption_body'=>'nullable|string|max:6500']);
+     $body=trim((string)($data['caption_body']??''));
+     $caption=RenderSettings::caption($body);
+     if(mb_strlen($caption)>1024)
+         throw ValidationException::withMessages(['caption_body'=>'Caption and hashtags exceed the Telegram limit of 1,024 characters.']);
+     DB::transaction(function()use($video,$body,$caption) {
+         $locked=Video::query()->whereKey($video->id)->lockForUpdate()->firstOrFail();
+         $render=$locked->currentRender;
+         if($locked->status!=='ready'||!$render||$render->status!=='ready')
+             throw ValidationException::withMessages(['caption_body'=>'Wait for the current render to finish before editing its caption.']);
+         if($render->publications()->exists())
+             throw ValidationException::withMessages(['caption_body'=>'This version is already approved. Create a new version to edit its caption.']);
+         $render->update(['caption'=>$caption]);
+         $locked->update(['caption_body'=>$body,'caption'=>$caption]);
+     });
+     ActivityLog::record('video.caption.updated','Video '.$video->id,auth()->id());
+     return back()->with('ok','Caption saved. The video was not re-rendered.');
+ }
+
  public function remake(Request $r,Video $video){
-    $v=$r->validate(['title'=>'nullable|string|max:300','caption_body'=>'nullable|string|max:6500','settings'=>'required|array']);
-    $clean=RenderSettings::validate($r->input('settings',[]));
-    $base=RenderSettings::current();$overrides=[];
+    // A title-only Remake must not depend on values from a collapsed settings panel.
+    $v=$r->validate(['title'=>'nullable|string|max:300','settings'=>'sometimes|array']);
+    $base=RenderSettings::current();
+    $current=array_replace($base,array_intersect_key($video->overrides??[],$base));
+    $submitted=$r->input('settings',[]);
+    $clean=RenderSettings::validate(array_replace($current,is_array($submitted)?$submitted:[]));
+    $overrides=[];
     foreach($clean as $key=>$val)if($val!==($base[$key]??null))$overrides[$key]=$val;
-    DB::transaction(function()use($video,$v,$overrides){
+    DB::transaction(function()use($video,$v,$overrides,$r){
        $locked=Video::whereKey($video->id)->lockForUpdate()->firstOrFail();
        if(!in_array($locked->status,['ready','failed'],true)||!$locked->source_path||!Storage::disk('private')->exists($locked->source_path))
            throw ValidationException::withMessages(['video'=>'The original video must exist and the previous render must be complete.']);
-       $locked->update(['title'=>trim((string)($v['title']??'')),'caption_body'=>trim((string)($v['caption_body']??'')),
-         'overrides'=>$overrides,'status'=>'queued','progress'=>0,'error'=>null]);
+       $title=$r->exists('title')?trim((string)($v['title']??'')):$locked->title;
+       // caption_body remains untouched: captions are edited and saved separately.
+       $locked->update(['title'=>$title,'overrides'=>$overrides,'status'=>'queued','progress'=>0,'error'=>null]);
        ProcessVideo::dispatch($locked->id)->onQueue('render')->afterCommit();
     });
     ActivityLog::record('video.remake','Video '.$video->id,auth()->id());
-    return back()->with('ok','New version queued for rendering. Publishing still requires a separate approval.');
+    return back()->with('ok','New version queued. Your saved caption is preserved and publication requires approval.');
  }
  public function retry(Video $video){
     if($video->status!=='failed'||!$video->source_path)throw ValidationException::withMessages(['video'=>'Only failed renders can be retried.']);
