@@ -1,0 +1,16 @@
+[Unit]
+Description=RealDarkMeme Neili Telegram publisher worker
+After=network-online.target
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/realdarkmeme-laravel
+ExecStart=/usr/bin/php artisan queue:work database --queue=publish --sleep=3 --tries=1 --timeout=1800 --memory=256
+Restart=always
+RestartSec=5
+TimeoutStopSec=1850
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

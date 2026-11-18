@@ -1,0 +1,16 @@
+[Unit]
+Description=RealDarkMeme render queue worker
+After=network-online.target
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/realdarkmeme-laravel
+ExecStart=/usr/bin/php artisan queue:work database --queue=render --sleep=3 --tries=1 --timeout=3600 --memory=512
+Restart=always
+RestartSec=5
+TimeoutStopSec=3650
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

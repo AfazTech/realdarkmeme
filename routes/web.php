@@ -1,0 +1,42 @@
+<?php
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController};
+
+Route::middleware('guest')->group(function(){
+ Route::get('/login',[AuthController::class,'show'])->name('login');
+ Route::post('/login',[AuthController::class,'login'])->middleware('throttle:5,1')->name('login.submit');
+});
+Route::middleware('auth')->group(function(){
+ Route::post('/logout',[AuthController::class,'logout'])->name('logout');
+ Route::get('/',[DashboardController::class,'index'])->name('dashboard');
+ Route::get('/videos',[VideoController::class,'index'])->name('videos.index');
+ Route::get('/videos/{video}',[VideoController::class,'show'])->name('videos.show');
+ Route::post('/videos/{video}/remake',[VideoController::class,'remake'])->name('videos.remake');
+ Route::post('/videos/{video}/retry-render',[VideoController::class,'retry'])->name('videos.retry');
+ Route::get('/videos/{video}/files/{kind}',[VideoController::class,'file'])->whereIn('kind',['source','poster','output'])->name('videos.file');
+ Route::get('/videos/{video}/download',[VideoController::class,'download'])->name('videos.download');
+ Route::post('/videos/{video}/approve',[PublicationController::class,'approve'])->name('videos.approve');
+ Route::post('/publications/{publication}/retry',[PublicationController::class,'retry'])->name('publications.retry');
+ Route::get('/channels',[ChannelController::class,'index'])->name('channels.index');
+ Route::post('/channels',[ChannelController::class,'store'])->name('channels.store');
+ Route::patch('/channels/{channel}',[ChannelController::class,'update'])->name('channels.update');
+ Route::delete('/channels/{channel}',[ChannelController::class,'destroy'])->name('channels.destroy');
+ Route::get('/settings',[SettingsController::class,'index'])->name('settings.index');
+ Route::get('/app-settings',[SettingsController::class,'general'])->name('settings.general');
+ Route::post('/app-settings/hashtags',[SettingsController::class,'hashtags'])->name('settings.hashtags');
+ Route::post('/settings/render',[SettingsController::class,'render'])->name('settings.render');
+ Route::post('/settings/bot',[SettingsController::class,'bot'])->name('settings.bot');
+ Route::post('/settings/bot/test',[SettingsController::class,'testBot'])->name('settings.bot.test');
+ Route::post('/settings/assets',[SettingsController::class,'assets'])->name('settings.assets');
+ Route::get('/settings/assets/{kind}/preview',[SettingsController::class,'assetPreview'])->whereIn('kind',['thumbnail','outro'])->name('settings.assets.preview');
+ Route::post('/settings/password',[SettingsController::class,'password'])->name('settings.password');
+ Route::get('/telegram',[TelegramController::class,'index'])->name('telegram.index');
+ Route::get('/telegram/status',[TelegramController::class,'status'])->name('telegram.status');
+ Route::post('/telegram/status/refresh',[TelegramController::class,'refresh'])->middleware('throttle:6,1')->name('telegram.refresh');
+ Route::get('/telegram/connect',fn()=>redirect()->route('telegram.index'))->name('telegram.connect');
+ Route::post('/telegram/credentials',[TelegramController::class,'credentials'])->middleware('throttle:5,1')->name('telegram.credentials');
+ Route::post('/telegram/login/phone',[TelegramController::class,'phone'])->middleware('throttle:3,5')->name('telegram.login.phone');
+ Route::post('/telegram/login/code',[TelegramController::class,'code'])->middleware('throttle:5,5')->name('telegram.login.code');
+ Route::post('/telegram/login/password',[TelegramController::class,'password'])->middleware('throttle:5,5')->name('telegram.login.password');
+ Route::post('/telegram/disconnect',[TelegramController::class,'disconnect'])->name('telegram.disconnect');
+});

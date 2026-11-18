@@ -1,0 +1,16 @@
+RealDarkMeme Studio v2.2 - Telegram login isolation patch
+
+.env.example
+README.md
+TESTS.md
+UPGRADE_v2.2_FA.md
+app/Console/Commands/TelegramAuth.php
+app/Http/Controllers/TelegramController.php
+app/Services/TelegramAuthClient.php
+app/Support/TelegramCredentials.php
+app/Console/Commands/StudioListen.php
+routes/web.php
+resources/views/telegram/index.blade.php
+config/realdarkmeme.php
+resources/views/layouts/app.blade.php
+tests/Feature/TelegramPanelTest.php

@@ -1,0 +1,9 @@
+<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign In | RealDarkMeme</title><link rel="stylesheet" href="{{ asset('assets/studio.css') }}"></head>
+<body class="auth-body"><div class="auth-scene"><div class="auth-intro"><div class="auth-brand">R<span>.</span>D<span>.</span>M</div><span class="auth-overline">CONTENT OPERATIONS PLATFORM</span><h1>Every video.<br><em>Ready to publish.</em></h1><p>From Telegram collection to cover design, rendering, review and publishing. All in one controlled workflow.</p><div class="auth-pattern">01 / COLLECT&nbsp;&nbsp; 02 / CREATE&nbsp;&nbsp; 03 / PUBLISH</div></div>
+<div class="auth-right"><div class="auth-box"><span class="eyebrow">WELCOME BACK</span><h2>Sign in to Studio</h2><p>Use your administrator credentials to access the workspace.</p>
+@if($errors->any())<div class="notice error">{{ $errors->first() }}</div>@endif
+<form method="post" action="{{ route('login.submit') }}">@csrf
+<label class="field-label" for="username">Username</label><input class="field" id="username" name="username" autocomplete="username" required autofocus value="{{ old('username') }}" placeholder="admin">
+<label class="field-label" for="password">Password</label><input class="field" id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+<button type="submit" class="btn btn-dark wide">Sign in <span>→</span></button></form>
+<div class="auth-foot">REALDARKMEME · PRIVATE STUDIO</div></div></div></div></body></html>
