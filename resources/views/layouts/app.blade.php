@@ -75,5 +75,5 @@
  </div>
 </div>
 <div class="backdrop" id="mobileBackdrop"></div>
-<script src="{{ asset('assets/studio.js') }}" defer></script>
+<script src="{{ asset('assets/studio.js').'?v=2.7' }}" defer></script>
 </body></html>
