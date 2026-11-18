@@ -110,4 +110,105 @@ class StudioTest extends TestCase
         $this->actingAs($admin)->post(route('telegram.login.phone'),['phone'=>'+491234567890'])
             ->assertSessionHasErrors('phone');
     }
+
+    public function test_caption_can_be_saved_without_changing_the_overlay_or_queueing_render(): void
+    {
+        Queue::fake(); Storage::fake('private');
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        Setting::store('hashtags','#reels #meme');
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create([
+            'channel_id'=>$channel->id,'telegram_message_id'=>203,'title'=>'Overlay title',
+            'caption_body'=>'Old caption','caption'=>'Old caption','status'=>'ready'
+        ]);
+        $render=Render::create([
+            'video_id'=>$video->id,'version'=>1,'status'=>'ready','title'=>'Overlay title',
+            'caption'=>'Old caption','output_path'=>'outputs/203-v1.mp4','settings_snapshot'=>[]
+        ]);
+        $video->update(['current_render_id'=>$render->id]);
+        $this->actingAs($admin)->get(route('videos.show',$video))
+            ->assertOk()->assertSee('Save caption')->assertSee('Approve &amp; Publish',false);
+        $this->actingAs($admin)->post(route('videos.caption',$video),['caption_body'=>'New caption'])
+            ->assertSessionHas('ok');
+        $this->assertSame("New caption\n\n#reels #meme",$video->fresh()->caption);
+        $this->assertSame("New caption\n\n#reels #meme",$render->fresh()->caption);
+        $this->assertSame('Overlay title',$video->fresh()->title);
+        $this->assertSame('Overlay title',$render->fresh()->title);
+        $this->assertSame($render->id,$video->fresh()->current_render_id);
+        $this->assertSame(1,Render::count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_caption_cannot_be_changed_after_approval(): void
+    {
+        Queue::fake(); Storage::fake('private');
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>205,
+            'title'=>'Overlay','caption_body'=>'Original','caption'=>'Original','status'=>'ready']);
+        $render=Render::create(['video_id'=>$video->id,'version'=>1,'status'=>'ready','title'=>'Overlay',
+            'caption'=>'Original','output_path'=>'outputs/205-v1.mp4','settings_snapshot'=>[]]);
+        $video->update(['current_render_id'=>$render->id]);
+        Publication::create(['video_id'=>$video->id,'render_id'=>$render->id,'destination'=>'@example',
+            'status'=>'queued','approved_by'=>$admin->id]);
+        $this->actingAs($admin)->post(route('videos.caption',$video),['caption_body'=>'Changed'])
+            ->assertSessionHasErrors('caption_body');
+        $this->assertSame('Original',$render->fresh()->caption);
+        $this->assertSame('Original',$video->fresh()->caption_body);
+        $this->actingAs($admin)->get(route('videos.show',$video))
+            ->assertOk()->assertDontSee('name="caption_body"',false);
+    }
+
+    public function test_title_only_remake_uses_saved_options_and_keeps_caption(): void
+    {
+        Queue::fake(); Storage::fake('private');
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>206,
+            'source_path'=>'inputs/206.mp4','status'=>'ready','title'=>'Old title',
+            'caption_body'=>'Already saved','caption'=>'Already saved',
+            'overrides'=>['watermark_enabled'=>false]]);
+        Storage::disk('private')->put('inputs/206.mp4',str_repeat('x',3000));
+        $this->actingAs($admin)->post(route('videos.remake',$video),['title'=>'New overlay'])
+            ->assertSessionHas('ok');
+        $fresh=$video->fresh();
+        $this->assertSame('New overlay',$fresh->title);
+        $this->assertSame('Already saved',$fresh->caption_body);
+        $this->assertSame('Already saved',$fresh->caption);
+        $this->assertSame(false,$fresh->overrides['watermark_enabled']);
+        $this->assertSame('queued',$fresh->status);
+        Queue::assertPushed(ProcessVideo::class,1);
+    }
+
+    public function test_invalid_video_setting_shows_which_field_is_invalid(): void
+    {
+        Queue::fake(); Storage::fake('private');
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>207,
+            'source_path'=>'inputs/207.mp4','status'=>'ready']);
+        Storage::disk('private')->put('inputs/207.mp4',str_repeat('x',3000));
+        $this->actingAs($admin)->post(route('videos.remake',$video),[
+            'title'=>'New title','settings'=>['font_size'=>['bad']]
+        ])->assertSessionHasErrors('font_size');
+        $this->assertSame('ready',$video->fresh()->status);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_caption_and_hashtags_cannot_exceed_telegram_limit(): void
+    {
+        Queue::fake();
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>208,'status'=>'ready']);
+        $render=Render::create(['video_id'=>$video->id,'version'=>1,'status'=>'ready',
+            'caption'=>'Original','settings_snapshot'=>[]]);
+        $video->update(['current_render_id'=>$render->id]);
+        Setting::store('hashtags','#tag');
+        $this->actingAs($admin)->post(route('videos.caption',$video),[
+            'caption_body'=>str_repeat('x',1024)
+        ])->assertSessionHasErrors('caption_body');
+        $this->assertSame('Original',$render->fresh()->caption);
+    }
+
 }
