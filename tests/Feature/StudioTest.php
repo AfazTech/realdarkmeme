@@ -312,6 +312,7 @@ class StudioTest extends TestCase
             'current_password'=>'secret',
         ])->assertSessionHas('ok')->assertSessionHasNoErrors();
         $this->assertStringContainsString('192.0.2.0/24',(string)Setting::fetch('admin_ip_allowlist'));
+        auth()->logout();
         $this->withServerVariables(['REMOTE_ADDR'=>'192.0.2.123']);
         $this->get(route('login'))->assertOk();
         $this->withServerVariables(['REMOTE_ADDR'=>'198.51.100.11']);
