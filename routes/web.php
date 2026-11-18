@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController};
+use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController,SenderController};
 
 Route::middleware('guest')->group(function(){
  Route::get('/login',[AuthController::class,'show'])->name('login');
@@ -25,8 +25,9 @@ Route::middleware('auth')->group(function(){
  Route::get('/app-settings',[SettingsController::class,'general'])->name('settings.general');
  Route::post('/app-settings/hashtags',[SettingsController::class,'hashtags'])->name('settings.hashtags');
  Route::post('/settings/render',[SettingsController::class,'render'])->name('settings.render');
- Route::post('/settings/bot',[SettingsController::class,'bot'])->name('settings.bot');
- Route::post('/settings/bot/test',[SettingsController::class,'testBot'])->name('settings.bot.test');
+ Route::post('/senders',[SenderController::class,'store'])->name('senders.store');
+ Route::patch('/senders/{sender}',[SenderController::class,'update'])->name('senders.update');
+ Route::post('/senders/{sender}/test',[SenderController::class,'test'])->middleware('throttle:5,1')->name('senders.test');
  Route::post('/settings/assets',[SettingsController::class,'assets'])->name('settings.assets');
  Route::get('/settings/assets/{kind}/preview',[SettingsController::class,'assetPreview'])->whereIn('kind',['thumbnail','outro'])->name('settings.assets.preview');
  Route::post('/settings/password',[SettingsController::class,'password'])->name('settings.password');

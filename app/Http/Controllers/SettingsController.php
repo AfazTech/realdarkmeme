@@ -5,9 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Storage,Hash};
 use Illuminate\Validation\ValidationException;
 use App\Models\{Setting,ActivityLog};
-use App\Support\{RenderSettings,BotSettings};
-use Neili\{Client,Settings};
-use Throwable;
+use App\Support\RenderSettings;
+use App\Models\Sender;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class SettingsController extends Controller
 {
@@ -44,8 +43,7 @@ class SettingsController extends Controller
  }
  public function general(){
     return view('settings.general',[
-      'hashtags'=>Setting::fetch('hashtags',''), 'bot_chat'=>BotSettings::chat(),
-      'bot_api_url'=>BotSettings::apiUrl(), 'token_set'=>BotSettings::token()!=='',
+      'hashtags'=>Setting::fetch('hashtags',''), 'senders'=>Sender::query()->latest()->get(),
     ]);
  }
  public function hashtags(Request $r){
@@ -59,20 +57,6 @@ class SettingsController extends Controller
     Setting::store('render_settings',json_encode($values,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
     ActivityLog::record('settings.render','Render configuration updated',auth()->id());
     return back()->with('ok','Studio rendering settings saved.');
- }
- public function bot(Request $r){
-    $v=$r->validate(['bot_token'=>'nullable|string|max:220','bot_chat'=>'nullable|string|max:100','bot_api_url'=>'required|string|max:200']);
-    BotSettings::save($v);ActivityLog::record('settings.bot','Bot configuration updated (token hidden)',auth()->id());
-    return back()->with('ok','Telegram publishing settings saved.');
- }
- public function testBot(){
-    BotSettings::assertReady();
-    try {
-      $settings=(new Settings())->setAccessToken(BotSettings::token())->setApiUrl(BotSettings::apiUrl())->setTimeout(20,8);
-      $res=(new Client($settings))->getMe()->await();
-      $name=$res['result']['username']??$res['username']??'bot';
-      return back()->with('ok','Bot connection verified: @'.$name.' (channel posting permissions are not verified).');
-    }catch(Throwable $e){return back()->withErrors(['bot'=>'Bot connection failed. Check the server logs.']);}
  }
  public function assets(Request $r){
     $r->validate(['thumbnail'=>'nullable|image|mimes:png|max:10240','outro'=>'nullable|image|mimes:png|max:10240']);
