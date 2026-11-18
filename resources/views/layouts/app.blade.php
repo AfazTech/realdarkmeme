@@ -3,7 +3,7 @@
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#161c22"><title>@yield('title','Dashboard') | RealDarkMeme</title>
- <link rel="stylesheet" href="{{ asset('assets/studio.css') }}">
+ <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.5' }}">
 </head>
 <body class="studio">
 <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

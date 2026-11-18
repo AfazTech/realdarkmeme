@@ -44,3 +44,17 @@ html[lang="en"]{direction:ltr} .caption-preview,.ocr-block,textarea[name="title"
 .asset-preview-details span:first-child{font-weight:700;color:var(--ink)}
 .asset-replace{margin:14px 16px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
 @media(max-width:900px){.asset-preview-grid{grid-template-columns:1fr}.asset-preview-stage{height:260px}}
+
+
+/* Caption-first review and persistent publication action (v2.5) */
+.review-banner{position:sticky;top:10px;z-index:12;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 21px;margin:0 0 20px;background:#253238;color:#fff;border:1px solid #334750;border-radius:13px;box-shadow:0 12px 30px rgba(19,33,38,.17)}
+.review-banner-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.review-banner-copy .eyebrow{color:#efb5a0}.review-banner-copy strong{font-size:16px;line-height:1.3}.review-banner-copy small{font-size:11px;line-height:1.65;color:#b6c4c7}
+.review-banner-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}.review-banner-actions form{margin:0}.review-banner-actions .btn{min-height:43px}
+.review-banner-actions .btn-subtle{background:#3a494e;color:#f7f8f8;border-color:#4b5b60}.review-banner-actions .btn-subtle:hover{background:#4a5a61;color:#fff}
+.publish-panel{scroll-margin-top:30px}.caption-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 19px}.caption-toolbar .btn{min-height:32px;padding:7px 12px}.caption-toolbar span{color:#98a7a9;font-size:11px}
+.caption-editor{scroll-margin-top:105px;padding:18px 0 15px;margin:12px 0 21px;border-top:1px solid #e6ece9;border-bottom:1px solid #e6ece9}
+.caption-editor-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.caption-editor-heading h4{font-size:13px;margin:0}
+.caption-editor .textarea{width:100%;min-height:140px;line-height:1.85;resize:vertical}.caption-editor .input-hint{margin-top:10px;margin-bottom:14px}.caption-editor .btn{min-height:43px}
+.caption-locked{color:#718085;font-size:11px;line-height:1.9;margin:9px 0}
+@media(max-width:750px){.review-banner{top:7px;align-items:stretch;flex-direction:column;padding:14px 15px;gap:12px}.review-banner-actions{width:100%;display:grid;grid-template-columns:1fr 1.5fr;gap:8px}.review-banner-actions form,.review-banner-actions .btn{width:100%}.review-banner-actions .btn{white-space:normal;line-height:1.3}.review-banner-copy strong{font-size:15px}}
+@media(max-width:390px){.review-banner-actions{grid-template-columns:1fr}.review-banner-actions .btn{min-height:39px}}

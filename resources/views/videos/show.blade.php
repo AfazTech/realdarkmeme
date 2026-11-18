@@ -1,7 +1,29 @@
 @extends('layouts.app')
 @section('title','Video Details #'.$video->id)
 @section('content')
-<div class="page-intro"><div><span class="eyebrow">MEDIA / VIDEO {{ str_pad($video->id,4,'0',STR_PAD_LEFT) }}</span><h1>Video Details <span class="soft-dot">.</span></h1><p>{{ $video->channel?->label }} <span class="dot-sep">•</span> Message {{ $video->telegram_message_id }} <span class="dot-sep">•</span> {{ $video->created_at->format('Y/m/d H:i') }}</p></div><div class="top-cta"><a class="btn btn-subtle" href="{{ route('videos.index') }}">Back</a>@if($video->currentRender && $video->status==='ready')<a class="btn btn-dark" href="{{ route('videos.download',$video) }}">Download MP4 <svg class="ico"><use href="#i-upload"/></svg></a>@endif</div></div>
+@php
+$currentRender=$video->currentRender;
+$currentPublications=$currentRender?->publications ?? collect();
+$canPublish=$video->status==='ready' && $currentRender?->status==='ready' && $currentPublications->isEmpty();
+@endphp
+<div class="page-intro">
+ <div><span class="eyebrow">MEDIA / VIDEO {{ str_pad($video->id,4,'0',STR_PAD_LEFT) }}</span><h1>Video Details <span class="soft-dot">.</span></h1><p>{{ $video->channel?->label }} <span class="dot-sep">•</span> Message {{ $video->telegram_message_id }} <span class="dot-sep">•</span> {{ $video->created_at->format('Y/m/d H:i') }}</p></div>
+ <div class="top-cta">
+  <a class="btn btn-subtle" href="{{ route('videos.index') }}">Back</a>
+  @if($currentRender && $video->status==='ready')<a class="btn btn-dark" href="{{ route('videos.download',$video) }}">Download MP4 <svg class="ico"><use href="#i-upload"/></svg></a>@endif
+ </div>
+</div>
+@if($canPublish)
+<div class="review-banner" aria-label="Publish ready video">
+ <div class="review-banner-copy"><span class="eyebrow">READY FOR APPROVAL</span><strong>Ready to publish</strong><small>Review and save the caption, then send this version to enabled senders.</small></div>
+ <div class="review-banner-actions">
+  <a href="#caption-editor" class="btn btn-subtle">Edit caption</a>
+  <form method="post" action="{{ route('videos.approve',$video) }}">@csrf
+   <button class="btn btn-accent" type="submit"><svg class="ico"><use href="#i-telegram"/></svg> Approve &amp; Publish</button>
+  </form>
+ </div>
+</div>
+@endif
 <div class="detail-grid"><div class="detail-main">
 <section class="surface media-panel"><div class="box-heading"><div><span class="eyebrow">PREVIEW</span><h3>Output Preview</h3></div>@include('components.status',['status'=>$video->status])</div>
 <div class="preview-area">
@@ -16,21 +38,35 @@
 </section>
 <section class="surface" id="remake"><div class="box-heading"><div><span class="eyebrow">RE-EDIT</span><h3>Edit and Remake</h3></div><span class="section-tag">REMAKE</span></div>
 <form method="post" action="{{ route('videos.remake',$video) }}">@csrf
-<div class="field-grid"><div class="field-group"><label class="field-label" for="title">Video title overlay</label><textarea dir="auto" id="title" name="title" class="field textarea" rows="3" maxlength="300" placeholder="Cover text">{{ old('title',$video->title) }}</textarea></div><div class="field-group"><label class="field-label" for="caption_body">Caption text</label><textarea dir="auto" id="caption_body" name="caption_body" class="field textarea" rows="5" maxlength="6500" placeholder="Enter the caption text">{{ old('caption_body',$video->caption_body) }}</textarea><small class="input-hint">Default hashtags from App Settings are appended to the caption.</small></div></div>
+<div class="field-group"><label class="field-label" for="title">Video title overlay</label><textarea dir="auto" id="title" name="title" class="field textarea" rows="3" maxlength="300" placeholder="Cover text">{{ old('title',$video->title) }}</textarea><small class="input-hint">Only the title and video settings affect Remake. Edit and save the caption separately in the review panel.</small></div>
 <details class="accordion"><summary>Video-specific settings <span>↘</span></summary><div class="setting-fields">@foreach($schema as $key=>$spec)<div class="setting-item"><label for="s_{{ $key }}">{{ $spec[0] }}</label>
-@if($spec[1]==='boolean')<label class="toggle-label"><input type="checkbox" id="s_{{ $key }}" name="settings[{{ $key }}]" value="1" @checked(old('settings.'.$key,$initial[$key]??false))><span></span>Enabled</label>
+@if($spec[1]==='boolean')<input type="hidden" name="settings[{{ $key }}]" value="0"><label class="toggle-label"><input type="checkbox" id="s_{{ $key }}" name="settings[{{ $key }}]" value="1" @checked(old('settings.'.$key,$initial[$key]??false))><span></span>Enabled</label>
 @elseif($spec[1]==='select')<select id="s_{{ $key }}" class="field" name="settings[{{ $key }}]">@foreach($spec[3] as $option)<option value="{{ $option }}" @selected((string)old('settings.'.$key,$initial[$key]??'')===(string)$option)>{{ $option }}</option>@endforeach</select>
 @else<input id="s_{{ $key }}" class="field" type="{{ $spec[1]==='color'?'color':(in_array($spec[1],['integer','number'])?'number':'text') }}" @if($spec[1]==='number') step="any" @elseif($spec[1]==='integer') step="1" @endif name="settings[{{ $key }}]" value="{{ old('settings.'.$key,$initial[$key]??'') }}" @if(isset($spec[4])) min="{{ $spec[3] }}" max="{{ $spec[4] }}" @endif>@endif</div>
 @endforeach</div></details>
-<div class="form-footer"><span>The original source will be preserved; a new version will be created.</span><button class="btn btn-dark" type="submit" @disabled(!in_array($video->status,['ready','failed']))>Create new version <svg class="ico"><use href="#i-spark"/></svg></button></div>
+<div class="form-footer"><span>Rebuild video with updated title/settings. Saved caption is kept.</span><button class="btn btn-dark" type="submit" @disabled(!in_array($video->status,['ready','failed']))>Create new version <svg class="ico"><use href="#i-spark"/></svg></button></div>
 </form></section>
 </div>
-<aside class="detail-side"><section class="surface"><span class="eyebrow">REVIEW & PUBLISH</span><h3>Publication approval</h3><p class="subparagraph">Review the current video and caption before approving publication.</p>
+<aside class="detail-side"><section class="surface publish-panel" id="publish"><span class="eyebrow">REVIEW & PUBLISH</span><h3>Publication approval</h3><p class="subparagraph">Review the current video and caption before approving publication.</p>
 @if($video->currentRender)
 <div class="info-row"><span>Current version</span><strong dir="ltr">V{{ $video->currentRender->version }}</strong></div>
 <div class="info-row"><span>Status</span>@include('components.status',['status'=>$video->currentRender->status])</div>
-<div class="caption-preview" dir="auto" id="captionText">{{ $video->currentRender->caption }}</div><button class="btn btn-subtle wide" type="button" data-copy="captionText">Copy caption</button>
-@php $publications=$video->currentRender->publications; @endphp
+<div class="caption-preview" dir="auto" id="captionText">{{ $currentRender->caption }}</div>
+<div class="caption-toolbar"><button class="btn btn-subtle" type="button" data-copy="captionText">Copy caption</button><span>Version V{{ $currentRender->version }}</span></div>
+<div id="caption-editor" class="caption-editor">
+ <div class="caption-editor-heading"><h4>Caption editor</h4><span class="section-tag">NO RE-RENDER</span></div>
+ @if($canPublish)
+ <form method="post" action="{{ route('videos.caption',$video) }}">@csrf
+  <label for="caption_body" class="field-label">Caption text</label>
+  <textarea dir="auto" id="caption_body" name="caption_body" class="field textarea" rows="6" maxlength="6500" placeholder="Write the text that will be published with this video.">{{ old('caption_body',$video->caption_body ?? $video->ocr_text ?? '') }}</textarea>
+  <small class="input-hint">Global hashtags from App Settings are appended on save. The full Telegram caption must be 1,024 characters or less.</small>
+  <button class="btn btn-dark wide" type="submit"><svg class="ico"><use href="#i-check"/></svg> Save caption</button>
+ </form>
+ @else
+ <p class="caption-locked">Caption editing is available when a version is ready and not yet approved. Published or approved versions keep their original caption; make a new version to edit again.</p>
+ @endif
+</div>
+@php $publications=$currentPublications; @endphp
 @if($publications->isNotEmpty())
  @foreach($publications as $pub)
  <div class="publish-status"><b>{{ $pub->sender?->name ?? 'Legacy Sender' }}</b> @include('components.status',['status'=>$pub->status])
