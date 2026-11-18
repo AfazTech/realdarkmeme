@@ -2,7 +2,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\{ProcessVideo,PublishVideo};
-use App\Models\{User,Channel,Video,Render,Publication,Setting};
+use App\Models\{User,Channel,Video,Render,Publication,Setting,Sender};
 use App\Support\{BotSettings,RenderSettings};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\{Queue,Storage};
@@ -23,7 +23,7 @@ class StudioTest extends TestCase
         $admin=User::create(['username'=>'admin','password'=>'x']);
         $this->actingAs($admin)->post('/channels',['peer_id'=>'@username','label'=>'Test'])->assertSessionHasErrors('peer_id');
         $this->actingAs($admin)->post('/channels',['peer_id'=>'-1001234567890','label'=>'Test'])->assertSessionHas('ok');
-        $this->assertDatabaseHas('channels',['peer_id'=>'-1001234567890','identifier'=>'-1001234567890']);
+        $this->assertDatabaseHas('channels',['peer_id'=>'-1001234567890']);
         $this->actingAs($admin)->get(route('channels.index'))->assertOk()->assertDontSee('Username / identifier');
     }
     public function test_assets_show_previews_in_settings_and_are_auth_protected(): void
@@ -48,7 +48,7 @@ class StudioTest extends TestCase
     {
         Queue::fake();Storage::fake('private');
         $admin=User::create(['username'=>'admin','password'=>'x']);
-        $channel=Channel::create(['peer_id'=>'-1001234567890','identifier'=>'@source','label'=>'Source','enabled'=>true]);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
         $v=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>100,'source_path'=>'inputs/1.mp4','status'=>'ready']);
         Storage::disk('private')->put('inputs/1.mp4',str_repeat('x',3000));
         $settings=RenderSettings::current();
@@ -60,12 +60,12 @@ class StudioTest extends TestCase
     {
         Queue::fake();Storage::fake('private');
         $admin=User::create(['username'=>'admin','password'=>'x']);
-        $channel=Channel::create(['peer_id'=>'-1001234567890','identifier'=>'@source','label'=>'Source','enabled'=>true]);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
         $v=Video::create(['channel_id'=>$channel->id,'telegram_message_id'=>100,'status'=>'ready']);
         $render=Render::create(['video_id'=>$v->id,'version'=>1,'status'=>'ready','output_path'=>'outputs/1/v1.mp4','title'=>'title','caption'=>'sample','settings_snapshot'=>[]]);
         Storage::disk('private')->put('outputs/1/v1.mp4',str_repeat('x',3000));
         $v->update(['current_render_id'=>$render->id]);
-        BotSettings::save(['bot_token'=>'123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ123456','bot_chat'=>'@destination','bot_api_url'=>'https://api.telegram.org/bot']);
+        Sender::create(['name'=>'Main','type'=>'telegram','enabled'=>true,'token'=>'123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ123456','destination'=>'@destination','api_url'=>'https://api.telegram.org/bot']);
         $this->actingAs($admin)->post(route('videos.approve',$v))->assertSessionHas('ok');
         $this->actingAs($admin)->post(route('videos.approve',$v))->assertSessionHasErrors('publish');
         $this->assertSame(1,Publication::count());
@@ -77,7 +77,7 @@ class StudioTest extends TestCase
         $this->actingAs($admin)->get(route('settings.index'))
             ->assertOk()->assertSee('Studio Settings')->assertDontSee('Bot token');
         $this->actingAs($admin)->get(route('settings.general'))
-            ->assertOk()->assertSee('App Settings')->assertSee('Bot token')->assertSee('Default hashtags');
+            ->assertOk()->assertSee('App Settings')->assertSee('Senders')->assertSee('Default hashtags');
         $this->actingAs($admin)->get(route('telegram.index'))
             ->assertOk()->assertSee('Phone number')->assertSee('Telegram API credentials');
     }
