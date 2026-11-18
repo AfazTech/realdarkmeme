@@ -49,7 +49,7 @@ class StudioImportLegacy extends Command
         try {
             DB::transaction(function()use($channels,$videos,$renders,$publications,$copy,$cleanTimestamp,$old,$disk,$dbh){
                 foreach($channels as $r)DB::table('channels')->insert([
-                    'id'=>$r['id'],'peer_id'=>$r['peer_id'],'identifier'=>$r['identifier'],'label'=>$r['label'],'enabled'=>$r['enabled'],
+                    'id'=>$r['id'],'peer_id'=>$r['peer_id'],'label'=>$r['label'],'enabled'=>$r['enabled'],
                     'created_at'=>$cleanTimestamp($r['created_at']), 'updated_at'=>$cleanTimestamp($r['created_at']),
                 ]);
                 foreach($videos as $r){
@@ -89,6 +89,7 @@ class StudioImportLegacy extends Command
                 foreach($publications as $r){
                     $status=in_array($r['status'],['sent','failed','uncertain'],true)?$r['status']:'uncertain';
                     DB::table('publications')->insert([
+                        'sender_id'=>DB::table('senders')->where('type','telegram')->value('id'),
                         'id'=>$r['id'],'video_id'=>$r['video_id'],'render_id'=>$r['render_id'],
                         'destination'=>$r['chat_id'],'status'=>$status,'telegram_message_id'=>$r['message_id'],
                         'attempts'=>$r['attempts']??0,'approved_by'=>null,'started_at'=>$cleanTimestamp($r['started_at']),

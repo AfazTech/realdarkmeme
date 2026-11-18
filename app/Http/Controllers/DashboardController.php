@@ -10,7 +10,7 @@ class DashboardController extends Controller
       'processing'=>Video::whereIn('status',['downloading','queued','processing'])->count(),
       'published'=>Publication::where('status','sent')->count(),
       'channels'=>Channel::where('enabled',true)->count(),
-      'videos'=>Video::with(['channel','currentRender.publication'])->latest()->limit(8)->get(),
+      'videos'=>Video::with(['channel','currentRender.publications.sender'])->latest()->limit(8)->get(),
       'activities'=>ActivityLog::latest()->limit(6)->get(),
    ]);
  }

@@ -12,8 +12,6 @@ class ChannelController extends Controller
     $v['peer_id']=trim($v['peer_id']);
     if(!preg_match('/^-100[0-9]{5,20}$/D',$v['peer_id']))throw ValidationException::withMessages(['peer_id'=>'Numeric channel peer IDs must start with -100.']);
     if(Channel::where('peer_id',$v['peer_id'])->exists())throw ValidationException::withMessages(['peer_id'=>'This channel is already configured.']);
-    // Legacy schema requires identifier; the numeric peer ID is enough for new sources.
-    $v['identifier']=$v['peer_id'];
     Channel::create($v+['enabled'=>true]);ActivityLog::record('channel.add',$v['peer_id'],auth()->id());
     return back()->with('ok','Source channel added.');
  }

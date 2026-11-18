@@ -11,13 +11,13 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class VideoController extends Controller
 {
  public function index(Request $r){
-    $q=Video::query()->with(['channel','currentRender.publication'])->latest();
+    $q=Video::query()->with(['channel','currentRender.publications.sender'])->latest();
     if(in_array($r->query('status'),['ready','queued','processing','downloading','failed'],true))$q->where('status',$r->query('status'));
     if($r->filled('channel_id'))$q->where('channel_id',(int)$r->query('channel_id'));
     return view('videos.index',['videos'=>$q->paginate(18)->withQueryString(),'filter'=>$r->query('status','')]);
  }
  public function show(Video $video){
-    $video->load(['channel','renders.publication','currentRender']);
+    $video->load(['channel','renders.publications.sender','currentRender']);
     return view('videos.show',['video'=>$video,'schema'=>RenderSettings::schema(),'global'=>RenderSettings::current(),'initial'=>array_replace(RenderSettings::current(),$video->overrides??[])]);
  }
  public function remake(Request $r,Video $video){
