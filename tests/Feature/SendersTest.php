@@ -48,7 +48,7 @@ class SendersTest extends TestCase
         $token='123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ123456';
         $sender=Sender::create(['name'=>'Main','type'=>'telegram','enabled'=>true,'token'=>$token,'destination'=>'@destination','api_url'=>'https://api.telegram.org/bot']);
         $this->assertNotSame($token,\DB::table('senders')->where('id',$sender->id)->value('token'));
-        $this->actingAs($admin)->get(route('settings.general'))->assertOk()->assertDontSee($token);
+        $this->actingAs($admin)->get(route('senders.index'))->assertOk()->assertSee('Add Telegram Sender')->assertDontSee($token);
         $this->actingAs($admin)->patch(route('senders.update',$sender),['name'=>'Main','type'=>'telegram','destination'=>'@destination','api_url'=>'https://api.telegram.org/bot'])
             ->assertSessionHas('ok');
         $this->assertFalse($sender->fresh()->enabled);
