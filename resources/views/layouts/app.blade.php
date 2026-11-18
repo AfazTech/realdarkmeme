@@ -5,6 +5,7 @@
  <meta name="theme-color" content="#161c22"><title>@yield('title','Dashboard') | RealDarkMeme</title>
  <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.7' }}">
  <link rel="stylesheet" href="{{ asset('assets/theme.css').'?v=2.7' }}">
+ <link rel="stylesheet" href="{{ asset('assets/queue-monitor.css').'?v=2.7' }}">
  <script>
  (function () {
    try {

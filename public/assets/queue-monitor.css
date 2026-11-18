@@ -1,0 +1,49 @@
+/* Operational queue monitor: compact, responsive, and readable in both themes. */
+.queue-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 23px}
+.queue-metric{display:flex;flex-direction:column;min-width:0;min-height:125px;padding:17px 19px;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--ink);transition:transform .2s,border-color .2s}
+.queue-metric:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--ink)}
+.queue-metric span{font-size:11px;font-weight:700;color:var(--muted)}
+.queue-metric strong{font-size:30px;line-height:1.2;margin:10px 0 5px}
+.queue-metric small{color:var(--muted);font-size:10px;line-height:1.6}
+.queue-attention{border-left:4px solid #dc9658;margin-bottom:22px}
+.queue-attention .box-heading{flex-wrap:wrap}
+.queue-attention .subparagraph strong{color:var(--ink)}
+.queue-attention-item{display:flex;align-items:flex-start;justify-content:space-between;gap:19px;border-top:1px solid var(--border);padding:18px 0}
+.queue-attention-item>div{min-width:0;max-width:65%}
+.queue-attention-item strong{font-size:13px}
+.queue-attention-item .dim{margin-top:7px;overflow-wrap:anywhere}
+.queue-attention-item a:not(.btn){text-decoration:underline;color:var(--accent)}
+.queue-attention-item .queue-error{margin:9px 0 0}
+.queue-retry{width:260px;max-width:40%;display:grid;gap:10px}
+.queue-retry label{font-size:11px;line-height:1.6;display:flex;align-items:flex-start;gap:8px;color:var(--muted)}
+.queue-retry label input{margin-top:4px;flex:none;accent-color:var(--accent)}
+.queue-retry button{justify-self:start}
+.queue-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+.queue-tabs a{padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:11px;font-weight:700}
+.queue-tabs a:hover{color:var(--ink);border-color:var(--accent)}
+.queue-tabs a.active{background:#26383d;color:#fff;border-color:#26383d}
+html[data-theme="dark"] .queue-tabs a.active{background:#4b626b;border-color:#4b626b}
+.queue-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.queue-filters a{display:inline-flex}
+.queue-counts{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin:10px 0 20px}
+.queue-counts>span{padding:5px 10px;border:1px solid var(--border);border-radius:7px}
+.queue-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.queue-table{width:100%;border-collapse:collapse;font-size:11px;line-height:1.7;min-width:790px}
+.queue-table th{font-size:10px;text-transform:uppercase;letter-spacing:.45px;font-weight:750;text-align:left;color:var(--muted);padding:12px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.queue-table td{padding:14px 10px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--ink);overflow-wrap:anywhere;max-width:310px}
+.queue-table td small{display:block;color:var(--muted);font-size:10px;line-height:1.8;margin-top:4px;word-break:break-word}
+.queue-table td a{font-weight:700;color:var(--accent)}
+.queue-table td .status{font-size:10px}
+.queue-table tr:last-child td{border-bottom:none}
+.queue-error{color:#bc5947;font-weight:650;overflow-wrap:anywhere}
+.queue-warning{color:#ad762e;font-weight:700}
+.queue-good{color:#238964;font-weight:700}
+html[data-theme="dark"] .queue-error{color:#ffb3a5}
+html[data-theme="dark"] .queue-warning{color:#ffd18d}
+html[data-theme="dark"] .queue-good{color:#87dcb2}
+.queue-state-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.queue-state-grid>div{display:flex;flex-direction:column;gap:9px;border:1px solid var(--border);padding:15px;border-radius:10px;background:var(--surface)}
+.queue-state-grid small{color:var(--muted);font-size:11px}
+.queue-state-grid strong{font-size:15px;overflow-wrap:anywhere}
+@media(max-width:1150px){.queue-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.queue-state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.queue-metrics{gap:9px}.queue-metric{padding:13px;min-height:115px}.queue-metric strong{font-size:25px}.queue-metric span{font-size:10px}.queue-attention-item{flex-direction:column}.queue-attention-item>div,.queue-retry{max-width:100%;width:100%}.queue-tabs{gap:6px}.queue-tabs a{padding:8px 11px}.queue-state-grid{grid-template-columns:1fr 1fr}}
