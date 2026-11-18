@@ -2,7 +2,7 @@
 @section('title','Senders')
 @section('content')
 <div class="page-intro"><div><span class="eyebrow">DISTRIBUTION / DESTINATIONS</span><h1>Senders <span class="soft-dot">.</span></h1><p>Manage destinations and delivery credentials independently from Studio settings.</p></div></div>
-<div class="settings-tabs"><a href="#publishing">Configured senders</a><a href="#publishing">Add sender</a><a href="{{ route('settings.general') }}">App Settings</a></div>
+<div class="settings-tabs"><a href="#publishing">Configured senders</a><a href="#new-sender">Add sender</a><a href="{{ route('settings.general') }}">App Settings</a></div>
 <section class="surface settings-block" id="publishing">
  <div class="box-heading"><div><span class="eyebrow">DELIVERY / CONNECTORS</span><h3>Senders</h3></div><span class="small-counter">{{ $senders->count() }} configured</span></div>
  <p class="subparagraph">Each enabled Sender receives a video when an admin approves its render. Telegram is the first connector; future services can be added separately. Disable a Sender to stop new deliveries without removing its history.</p>
@@ -21,7 +21,7 @@
   <form method="post" action="{{ route('senders.test',$sender) }}" class="test-form">@csrf<button class="btn btn-subtle" type="submit">Test bot connection</button></form>
  </div>
  @endforeach
- <div class="box-heading" style="margin-top:26px"><div><span class="eyebrow">NEW SENDER</span><h3>Add Telegram Sender</h3></div></div>
+ <div class="box-heading" id="new-sender" style="margin-top:26px;scroll-margin-top:30px"><div><span class="eyebrow">NEW SENDER</span><h3>Add Telegram Sender</h3></div></div>
  <form method="post" action="{{ route('senders.store') }}">@csrf<input type="hidden" name="type" value="telegram">
   <div class="field-grid">
    <div><label class="field-label">Sender name</label><input class="field" name="name" maxlength="120" required placeholder="Telegram · Main Channel"></div>
