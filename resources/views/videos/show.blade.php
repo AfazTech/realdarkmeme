@@ -30,10 +30,22 @@
 <div class="info-row"><span>Current version</span><strong dir="ltr">V{{ $video->currentRender->version }}</strong></div>
 <div class="info-row"><span>Status</span>@include('components.status',['status'=>$video->currentRender->status])</div>
 <div class="caption-preview" dir="auto" id="captionText">{{ $video->currentRender->caption }}</div><button class="btn btn-subtle wide" type="button" data-copy="captionText">Copy caption</button>
-@php $pub=$video->currentRender->publication; @endphp
-@if($pub)<div class="publish-status">@include('components.status',['status'=>$pub->status]) <small>Destination: {{ $pub->destination }}</small>@if($pub->telegram_message_id)<small>Message ID: {{ $pub->telegram_message_id }}</small>@endif @if($pub->error)<p class="inline-error">{{ $pub->error }}</p>@endif</div>
-@if(in_array($pub->status,['failed','uncertain']))<form method="post" action="{{ route('publications.retry',$pub) }}">@csrf @if($pub->status==='uncertain')<label class="confirm-row"><input type="checkbox" name="confirm_uncertain" value="1" required> I checked the channel and accept the risk of a duplicate post.</label>@endif<button class="btn btn-outline wide" type="submit">Retry publishing</button></form>@endif
-@else<form method="post" action="{{ route('videos.approve',$video) }}">@csrf<button type="submit" class="btn btn-accent wide" @disabled($video->status!=='ready')>Approve & publish to Telegram <svg class="ico"><use href="#i-telegram"/></svg></button></form>@endif
+@php $publications=$video->currentRender->publications; @endphp
+@if($publications->isNotEmpty())
+ @foreach($publications as $pub)
+ <div class="publish-status"><b>{{ $pub->sender?->name ?? 'Legacy Sender' }}</b> @include('components.status',['status'=>$pub->status])
+ <small>Destination: {{ $pub->destination }}</small>
+ @if($pub->telegram_message_id)<small>Message ID: {{ $pub->telegram_message_id }}</small>@endif
+ @if($pub->error)<p class="inline-error">{{ $pub->error }}</p>@endif</div>
+ @if(in_array($pub->status,['failed','uncertain']))
+ <form method="post" action="{{ route('publications.retry',$pub) }}">@csrf
+ @if($pub->status==='uncertain')<label class="confirm-row"><input type="checkbox" name="confirm_uncertain" value="1" required> I checked this sender destination and accept the risk of a duplicate post.</label>@endif
+ <button class="btn btn-outline wide" type="submit">Retry {{ $pub->sender?->name ?? 'Sender' }}</button></form>
+ @endif
+ @endforeach
+@else
+<form method="post" action="{{ route('videos.approve',$video) }}">@csrf<button type="submit" class="btn btn-accent wide" @disabled($video->status!=='ready')>Approve &amp; publish to enabled senders <svg class="ico"><use href="#i-telegram"/></svg></button></form>
+@endif
 @else<p class="dim">Rendering must finish before the video can be published.</p>@endif
 </section>
 <section class="surface"><span class="eyebrow">ORIGINAL FRAME</span><h3>Persian OCR result</h3><pre class="ocr-block" dir="auto">{{ $video->ocr_text ?: 'No Persian text was detected in the first frame, or OCR has not run yet.' }}</pre><p class="dim tiny">OCR examines only the first video frame.</p></section>
