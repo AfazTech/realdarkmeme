@@ -151,6 +151,8 @@ class TelegramAuth extends Command
         if (str_contains($message, 'PASSWORD_HASH_INVALID')) return 'Incorrect two-step verification password.';
         if (str_contains($message, 'PHONE_NUMBER_INVALID')) return 'Telegram rejected the phone number.';
         if (str_contains($message, 'API_ID_INVALID')) return 'Invalid Telegram API credentials.';
+        if (str_contains($message, 'FIRST STATEMENT OF AN EVENT HANDLER FILE')) return 'MadelineProto rejected the listener source. Update the event handler to begin with strict_types, then restart the listener.';
+        if (str_contains($message, 'COULD NOT CONNECT TO MADELINEPROTO')) return 'MadelineProto IPC could not start. Stop the listener, verify PHP proc_open is enabled, and inspect MadelineProto.log.';
         if (preg_match('/FLOOD_WAIT_([0-9]+)/', $message, $match)) {
             return 'Telegram rate limit: retry after '.$match[1].' seconds.';
         }
