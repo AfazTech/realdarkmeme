@@ -211,4 +211,66 @@ class StudioTest extends TestCase
         $this->assertSame('Original',$render->fresh()->caption);
     }
 
+
+    public function test_remake_accepts_blank_optional_font_paths_from_html_form(): void
+    {
+        Queue::fake(); Storage::fake('private');
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $channel=Channel::create(['peer_id'=>'-1001234567890','label'=>'Source','enabled'=>true]);
+        $video=Video::create([
+            'channel_id'=>$channel->id,'telegram_message_id'=>209,
+            'source_path'=>'inputs/209.mp4','status'=>'ready','title'=>'Old overlay',
+        ]);
+        Storage::disk('private')->put('inputs/209.mp4',str_repeat('x',3000));
+
+        // Empty HTML fields become null via Laravel's ConvertEmptyStringsToNull middleware.
+        $settings=array_replace(RenderSettings::current(),[
+            'title_font'=>'',
+            'emoji_font'=>'',
+            'watermark_font'=>'',
+        ]);
+        $this->actingAs($admin)->post(route('videos.remake',$video),[
+            'title'=>'New overlay','settings'=>$settings,
+        ])->assertSessionHas('ok')->assertSessionHasNoErrors();
+
+        $this->assertSame('queued',$video->fresh()->status);
+        $this->assertSame('New overlay',$video->fresh()->title);
+        Queue::assertPushed(ProcessVideo::class,1);
+    }
+
+    public function test_studio_settings_accept_empty_font_fields(): void
+    {
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $settings=array_replace(RenderSettings::current(),[
+            'title_font'=>'','emoji_font'=>'','watermark_font'=>'',
+        ]);
+        $this->actingAs($admin)->post(route('settings.render'),[
+            'settings'=>$settings,
+        ])->assertSessionHas('ok')->assertSessionHasNoErrors();
+
+        $saved=json_decode((string)Setting::fetch('render_settings'),true);
+        $this->assertSame('',$saved['title_font']);
+        $this->assertSame('',$saved['emoji_font']);
+        $this->assertSame('',$saved['watermark_font']);
+    }
+
+    public function test_null_font_paths_are_valid_but_arrays_remain_invalid(): void
+    {
+        $settings=array_replace(RenderSettings::current(),[
+            'title_font'=>null,'emoji_font'=>null,'watermark_font'=>null,
+        ]);
+        $validated=RenderSettings::validate($settings);
+        $this->assertSame('',$validated['title_font']);
+        $this->assertSame('',$validated['emoji_font']);
+        $this->assertSame('',$validated['watermark_font']);
+
+        $settings['title_font']=['unexpected'];
+        try {
+            RenderSettings::validate($settings);
+            $this->fail('Expected a validation error for an array font path.');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->assertArrayHasKey('title_font',$exception->errors());
+        }
+    }
+
 }

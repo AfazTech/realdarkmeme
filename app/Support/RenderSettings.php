@@ -40,6 +40,9 @@ class RenderSettings
         foreach(self::schema() as $key=>$def) {
             $val=$data[$key]??null;
             if ($def[1]==='boolean') { $out[$key]=in_array($val,[true,'1',1,'on'],true); continue; }
+            // Laravel converts empty HTML inputs to null. Blank optional text values
+            // (notably font paths) are valid and should use the renderer defaults.
+            if ($def[1]==='text' && $val===null) $val='';
             if (!is_scalar($val)) throw ValidationException::withMessages([$key=>'Invalid value for '.$def[0].' ('.$key.').']);
             if ($def[1]==='integer' || $def[1]==='number') {
                 if(!is_numeric($val)) throw ValidationException::withMessages([$key=>'Enter a valid number for '.$def[0].'.']);
