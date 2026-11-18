@@ -3,7 +3,7 @@
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#161c22"><title>@yield('title','Dashboard') | RealDarkMeme</title>
- <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.5' }}">
+ <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.6' }}">
 </head>
 <body class="studio">
 <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -22,7 +22,7 @@
 </svg>
 <div class="shell" id="appShell">
  <aside class="sidebar" id="sidebar">
-  <div class="brand"><span class="brand-mark"><span>R</span><i></i></span><span class="brand-copy"><b>REALDARKMEME</b><small>CONTENT STUDIO <span class="ver">/ 2.3</span></small></span></div>
+  <div class="brand"><span class="brand-mark"><span>R</span><i></i></span><span class="brand-copy"><b>REALDARKMEME</b><small>CONTENT STUDIO <span class="ver">/ 2.6</span></small></span></div>
   <div class="sidebar-sep"></div>
   <div class="nav-heading">WORKSPACE</div>
   <nav class="side-nav" aria-label="Main navigation">
@@ -30,11 +30,16 @@
    <a href="{{ route('videos.index') }}" class="nav-link {{ request()->routeIs('videos.*')?'current':'' }}"><svg class="ico"><use href="#i-play"/></svg> Video Library</a>
    <a href="{{ route('channels.index') }}" class="nav-link {{ request()->routeIs('channels.*')?'current':'' }}"><svg class="ico"><use href="#i-layers"/></svg> Source Channels</a>
   </nav>
-  <div class="nav-heading second">CONNECTIONS &amp; SETTINGS</div>
+  <div class="nav-heading second">CONNECTIONS &amp; DELIVERY</div>
   <nav class="side-nav">
    <a href="{{ route('telegram.index') }}" class="nav-link {{ request()->routeIs('telegram.*')?'current':'' }}"><svg class="ico"><use href="#i-telegram"/></svg> Telegram Account</a>
-   <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index')?'current':'' }}"><svg class="ico"><use href="#i-spark"/></svg> Studio Settings</a>
-   <a href="{{ route('settings.general') }}" class="nav-link {{ request()->routeIs('settings.general')?'current':'' }}"><svg class="ico"><use href="#i-settings"/></svg> App Settings</a>
+   <a href="{{ route('senders.index') }}" class="nav-link {{ request()->routeIs('senders.*')?'current':'' }}"><svg class="ico"><use href="#i-upload"/></svg> Senders</a>
+  </nav>
+  <div class="nav-heading second">SETTINGS</div>
+  <nav class="side-nav">
+   <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') || request()->routeIs('settings.group') || request()->routeIs('settings.media') ?'current':'' }}"><svg class="ico"><use href="#i-spark"/></svg> Studio Settings</a>
+   <a href="{{ route('settings.general') }}" class="nav-link {{ request()->routeIs('settings.general') || request()->routeIs('settings.captions')?'current':'' }}"><svg class="ico"><use href="#i-settings"/></svg> App Settings</a>
+   <a href="{{ route('settings.security') }}" class="nav-link {{ request()->routeIs('settings.security')?'current':'' }}"><svg class="ico"><use href="#i-check"/></svg> Admin Security</a>
   </nav>
   <div class="sidebar-bottom">
    <div class="sidebar-note"><span class="alive-dot"></span><b>Studio engine</b><small>Laravel / FFmpeg / OCR</small></div>
