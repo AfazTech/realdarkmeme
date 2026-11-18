@@ -1,12 +1,12 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController,SenderController};
+use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController,SenderController,SecurityController};
 
-Route::middleware('guest')->group(function(){
+Route::middleware(['admin.ip','guest'])->group(function(){
  Route::get('/login',[AuthController::class,'show'])->name('login');
  Route::post('/login',[AuthController::class,'login'])->middleware('throttle:5,1')->name('login.submit');
 });
-Route::middleware('auth')->group(function(){
+Route::middleware(['admin.ip','auth'])->group(function(){
  Route::post('/logout',[AuthController::class,'logout'])->name('logout');
  Route::get('/',[DashboardController::class,'index'])->name('dashboard');
  Route::get('/videos',[VideoController::class,'index'])->name('videos.index');
@@ -23,9 +23,16 @@ Route::middleware('auth')->group(function(){
  Route::patch('/channels/{channel}',[ChannelController::class,'update'])->name('channels.update');
  Route::delete('/channels/{channel}',[ChannelController::class,'destroy'])->name('channels.destroy');
  Route::get('/settings',[SettingsController::class,'index'])->name('settings.index');
+ Route::get('/settings/media',[SettingsController::class,'media'])->name('settings.media');
+ Route::get('/settings/rendering/{group}',[SettingsController::class,'renderGroup'])->whereIn('group',['cover','watermark','video','outro','output'])->name('settings.group');
+ Route::post('/settings/rendering/{group}',[SettingsController::class,'updateGroup'])->whereIn('group',['cover','watermark','video','outro','output'])->name('settings.group.save');
  Route::get('/app-settings',[SettingsController::class,'general'])->name('settings.general');
+ Route::get('/app-settings/captions',[SettingsController::class,'captions'])->name('settings.captions');
+ Route::get('/app-settings/security',[SecurityController::class,'index'])->name('settings.security');
+ Route::post('/app-settings/security/allowlist',[SecurityController::class,'saveAllowlist'])->middleware('throttle:5,1')->name('settings.security.allowlist');
  Route::post('/app-settings/hashtags',[SettingsController::class,'hashtags'])->name('settings.hashtags');
  Route::post('/settings/render',[SettingsController::class,'render'])->name('settings.render');
+ Route::get('/senders',[SenderController::class,'index'])->name('senders.index');
  Route::post('/senders',[SenderController::class,'store'])->name('senders.store');
  Route::patch('/senders/{sender}',[SenderController::class,'update'])->name('senders.update');
  Route::post('/senders/{sender}/test',[SenderController::class,'test'])->middleware('throttle:5,1')->name('senders.test');

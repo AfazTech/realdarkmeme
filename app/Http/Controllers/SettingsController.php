@@ -6,28 +6,63 @@ use Illuminate\Support\Facades\{Storage,Hash};
 use Illuminate\Validation\ValidationException;
 use App\Models\{Setting,ActivityLog};
 use App\Support\RenderSettings;
-use App\Models\Sender;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class SettingsController extends Controller
 {
- public function index(){
-    $disk=Storage::disk('private');
-    $assets=[];
-    foreach(['thumbnail'=>'thumbnail.png','outro'=>'outro.png'] as $key=>$name){
-        $path='assets/'.$name;
-        $exists=$disk->exists($path);
-        $assets[$key]=[
-            'exists'=>$exists,
-            'size'=>$exists ? $disk->size($path) : null,
-            'updated'=>$exists ? $disk->lastModified($path) : null,
-        ];
-    }
-    return view('settings.index',[
-       'schema'=>RenderSettings::schema(),
-       'render'=>RenderSettings::current(),
-       'mediaAssets'=>$assets,
-    ]);
+ private const GROUPS = [
+     'cover'=>'Cover',
+     'watermark'=>'Watermark',
+     'video'=>'Video',
+     'outro'=>'Outro',
+     'output'=>'Output',
+ ];
+
+ public function index()
+ {
+     return view('settings.index',['groups'=>self::GROUPS]);
  }
+
+ public function media()
+ {
+     $disk=Storage::disk('private');
+     $assets=[];
+     foreach(['thumbnail'=>'thumbnail.png','outro'=>'outro.png'] as $key=>$name) {
+         $path='assets/'.$name;
+         $exists=$disk->exists($path);
+         $assets[$key]=[
+             'exists'=>$exists,
+             'size'=>$exists?$disk->size($path):null,
+             'updated'=>$exists?$disk->lastModified($path):null,
+         ];
+     }
+     return view('settings.media',['mediaAssets'=>$assets]);
+ }
+
+ public function renderGroup(string $group)
+ {
+     abort_unless(isset(self::GROUPS[$group]),404);
+     $schema=array_filter(RenderSettings::schema(),fn($spec)=>$spec[2]===self::GROUPS[$group]);
+     return view('settings.group',[
+         'group'=>$group,'groupName'=>self::GROUPS[$group],
+         'groups'=>self::GROUPS,'schema'=>$schema,'render'=>RenderSettings::current(),
+     ]);
+ }
+
+ public function updateGroup(Request $request,string $group)
+ {
+     abort_unless(isset(self::GROUPS[$group]),404);
+     $input=$request->validate(['settings'=>'required|array'])['settings'];
+     $schema=RenderSettings::schema();
+     $keys=array_keys(array_filter($schema,fn($spec)=>$spec[2]===self::GROUPS[$group]));
+     $unknown=array_diff(array_keys($input),$keys);
+     if($unknown) throw ValidationException::withMessages(['settings'=>'Unexpected settings for this group.']);
+     // Merging with current settings prevents changes in one group from erasing other groups.
+     $values=RenderSettings::validate(array_replace(RenderSettings::current(),$input));
+     Setting::store('render_settings',json_encode($values,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
+     ActivityLog::record('settings.render.'.$group,'Updated '.self::GROUPS[$group].' settings',auth()->id());
+     return redirect()->route('settings.group',$group)->with('ok',self::GROUPS[$group].' settings saved.');
+ }
+
  public function assetPreview(string $kind): BinaryFileResponse
  {
     $files=['thumbnail'=>'thumbnail.png','outro'=>'outro.png'];
@@ -41,11 +76,12 @@ class SettingsController extends Controller
         'X-Content-Type-Options'=>'nosniff',
     ]);
  }
- public function general(){
-    return view('settings.general',[
-      'hashtags'=>Setting::fetch('hashtags',''), 'senders'=>Sender::query()->latest()->get(),
-    ]);
+ public function general(){ return view('settings.general'); }
+
+ public function captions(){
+     return view('settings.captions',['hashtags'=>Setting::fetch('hashtags','')]);
  }
+
  public function hashtags(Request $r){
     $v=$r->validate(['hashtags'=>'nullable|string|max:2000']);
     Setting::store('hashtags',RenderSettings::hashtags((string)($v['hashtags']??'')));

@@ -9,6 +9,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([__DIR__.'/../app/Console/Commands'])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->alias(['admin.ip' => \App\Http\Middleware\EnforceAdminIp::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {})
     ->create();

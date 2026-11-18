@@ -13,6 +13,11 @@ use Throwable;
 
 class SenderController extends Controller
 {
+    public function index()
+    {
+        return view('senders.index',['senders'=>Sender::query()->withCount('publications')->latest()->get()]);
+    }
+
     public function store(Request $request)
     {
         $data = $this->validated($request,true);
