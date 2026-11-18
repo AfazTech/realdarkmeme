@@ -72,7 +72,8 @@ $canPublish=$video->status==='ready' && $currentRender?->status==='ready' && $cu
  <div class="publish-status"><b>{{ $pub->sender?->name ?? 'Legacy Sender' }}</b> @include('components.status',['status'=>$pub->status])
  <small>Destination: {{ $pub->destination }}</small>
  @if($pub->telegram_message_id)<small>Message ID: {{ $pub->telegram_message_id }}</small>@endif
- @if($pub->error)<p class="inline-error">{{ $pub->error }}</p>@endif</div>
+ @if($pub->error)<p class="inline-error">{{ $pub->error }}</p>@endif
+ @if($pub->status==='uncertain')<p class="dim tiny">The sender request may have succeeded. Check the destination before retrying.</p><a class="text-link" href="{{ route('queues.index',['tab'=>'deliveries','status'=>'uncertain']) }}">Review in Queue Monitor</a>@endif</div>
  @if(in_array($pub->status,['failed','uncertain']))
  <form method="post" action="{{ route('publications.retry',$pub) }}">@csrf
  @if($pub->status==='uncertain')<label class="confirm-row"><input type="checkbox" name="confirm_uncertain" value="1" required> I checked this sender destination and accept the risk of a duplicate post.</label>@endif

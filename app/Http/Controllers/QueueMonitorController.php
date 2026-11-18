@@ -27,7 +27,9 @@ final class QueueMonitorController extends Controller
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')->pluck('total','status')->all();
         $uncertain=Publication::query()->with(['sender:id,name,type,enabled','video:id,title'])
-            ->where('status','uncertain')->latest('id')->limit(8)->get();
+            ->where('status','uncertain')->latest('id')->limit(8)->get()->each(function($record){
+                $record->display_error=self::safeMessage((string)$record->error);
+            });
         $hasJobs=Schema::hasTable('jobs');
         $hasFailures=Schema::hasTable('failed_jobs');
         $pendingCount=$hasJobs?DB::table('jobs')->count():0;
@@ -41,6 +43,9 @@ final class QueueMonitorController extends Controller
                 ->latest('id');
             if($status!=='all')$query->where('status',$status);
             $deliveries=$query->paginate(20)->withQueryString();
+            $deliveries->getCollection()->each(function($record){
+                $record->display_error=self::safeMessage((string)$record->error);
+            });
         }
         if($tab==='jobs' && $hasJobs){
             $queue=(string)$request->query('queue','all');
@@ -73,6 +78,9 @@ final class QueueMonitorController extends Controller
         if($tab==='renders'){
             $renders=Render::query()->with('video:id,title,status')
                 ->latest('id')->paginate(20)->withQueryString();
+            $renders->getCollection()->each(function($record){
+                $record->display_error=self::safeMessage((string)$record->error);
+            });
         }
         $telegramState=$tab==='telegram'?$telegram->read():null;
 

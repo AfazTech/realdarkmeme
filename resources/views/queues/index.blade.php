@@ -19,7 +19,7 @@
  <div class="queue-attention-item">
   <div><strong>#{{ $publication->id }} · {{ $publication->sender?->name??'Unknown Sender' }}</strong>
    <div class="dim tiny">Video <a href="{{ route('videos.show',$publication->video_id) }}">#{{ $publication->video_id }}</a> · {{ $publication->destination }} · {{ $publication->started_at?->format('Y-m-d H:i:s')??'Not recorded' }}</div>
-   <p class="queue-error">{{ $publication->error ?: 'The sender did not return a confirmed outcome.' }}</p>
+   <p class="queue-error">{{ $publication->display_error ?: 'The sender did not return a confirmed outcome.' }}</p>
   </div>
   @if($publication->sender?->enabled)
   <form action="{{ route('publications.retry',$publication) }}" method="post" class="queue-retry">@csrf
@@ -53,8 +53,8 @@
   <td>@include('components.status',['status'=>$p->status])</td>
   <td>
    @if($p->status==='sent')<span class="queue-good">Published successfully</span>@if($p->telegram_message_id)<small>Telegram message #{{ $p->telegram_message_id }}</small>@endif
-   @elseif($p->status==='uncertain')<b class="queue-warning">Delivery may have succeeded</b><small>{{ $p->error?:'No confirmation was received.' }}</small>
-   @elseif($p->status==='failed')<b class="queue-error">Delivery failed</b><small>{{ $p->error?:'No error details recorded.' }}</small>
+   @elseif($p->status==='uncertain')<b class="queue-warning">Delivery may have succeeded</b><small>{{ $p->display_error?:'No confirmation was received.' }}</small>
+   @elseif($p->status==='failed')<b class="queue-error">Delivery failed</b><small>{{ $p->display_error?:'No error details recorded.' }}</small>
    @elseif($p->status==='sending')<span>Sender request started</span>
    @else<span>Waiting for a publish worker</span>@endif
   </td>
@@ -97,7 +97,7 @@
  @foreach($renders as $render)<tr><td><strong>#{{ $render->id }}</strong><small>Version {{ $render->version }}</small></td>
  <td><a href="{{ route('videos.show',$render->video_id) }}">Video #{{ $render->video_id }}</a><small>{{ \Illuminate\Support\Str::limit($render->video?->title??'',45) }}</small></td>
  <td>@include('components.status',['status'=>$render->status])</td>
- <td>@if($render->status==='ready')<span class="queue-good">MP4 ready</span>@elseif($render->status==='failed')<span class="queue-error">{{ $render->error?:'Rendering failed without recorded details.' }}</span>@else{{ ucfirst($render->status) }}@endif</td>
+ <td>@if($render->status==='ready')<span class="queue-good">MP4 ready</span>@elseif($render->status==='failed')<span class="queue-error">{{ $render->display_error?:'Rendering failed without recorded details.' }}</span>@else{{ ucfirst($render->status) }}@endif</td>
  <td>{{ $render->completed_at?->format('Y-m-d H:i:s')??'Not finished' }}</td></tr>@endforeach
  </tbody></table></div><div class="pagination">{{ $renders->links('pagination.simple') }}</div>
  @else<div class="empty-inline">No render history yet.</div>@endif
