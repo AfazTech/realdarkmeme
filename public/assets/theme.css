@@ -1,0 +1,53 @@
+/* RealDarkMeme theme support: Light, Dark, System. Add after studio.css. */
+html[data-theme="dark"] {
+ --canvas:#11181c; --surface:#1a242a; --ink:#e5eff0; --muted:#97aaae;
+ --border:#314047; --sidebar:#10191e; --sidebar-text:#b7c6c9;
+ --accent:#f39770; --accent-soft:#432e2b; --green:#69c6a2;
+ --shadow:0 12px 35px rgba(0,0,0,.13);
+}
+html[data-theme="dark"] body{color:var(--ink);background:var(--canvas)}
+html[data-theme="dark"] .topbar{background:#162126;border-bottom-color:var(--border)}
+html[data-theme="dark"] .sidebar{background:var(--sidebar)}
+html[data-theme="dark"] .content,html[data-theme="dark"] .workarea{color:var(--ink)}
+html[data-theme="dark"] .surface,html[data-theme="dark"] .metric,html[data-theme="dark"] .video-card,html[data-theme="dark"] .asset-preview-card,html[data-theme="dark"] .settings-home-card,html[data-theme="dark"] .result-card{background:var(--surface);border-color:var(--border);color:var(--ink)}
+html[data-theme="dark"] .metric strong,html[data-theme="dark"] .info-row strong,html[data-theme="dark"] .channel-text .inline-edit,html[data-theme="dark"] .helper-note b,html[data-theme="dark"] .settings-home-card h3,html[data-theme="dark"] .sidebar-note b{color:var(--ink)}
+html[data-theme="dark"] .page-intro p,html[data-theme="dark"] .subparagraph,html[data-theme="dark"] .settings-home-card p,html[data-theme="dark"] .input-hint,html[data-theme="dark"] .dim,html[data-theme="dark"] .info-row,html[data-theme="dark"] .field-label,html[data-theme="dark"] .setting-item>label:first-child{color:#9fb0b3}
+html[data-theme="dark"] .top-chip,html[data-theme="dark"] .small-counter,html[data-theme="dark"] .settings-tabs a,html[data-theme="dark"] .filter,html[data-theme="dark"] .pagination a,html[data-theme="dark"] .pagination span,html[data-theme="dark"] .field,html[data-theme="dark"] .btn-outline,html[data-theme="dark"] .btn-subtle,html[data-theme="dark"] .tg-api-config,html[data-theme="dark"] .ip-current,html[data-theme="dark"] .ip-enable,html[data-theme="dark"] .helper-note,html[data-theme="dark"] .caption-preview,html[data-theme="dark"] .ocr-block,html[data-theme="dark"] .asset-preview-details,html[data-theme="dark"] .accordion,html[data-theme="dark"] .file-drop,html[data-theme="dark"] .caption-editor{background:#202c31;color:var(--ink);border-color:var(--border)}
+html[data-theme="dark"] .field::placeholder,html[data-theme="dark"] .inline-edit::placeholder{color:#748c92}
+html[data-theme="dark"] .field:focus{border-color:#80aaac;box-shadow:0 0 0 3px rgba(125,173,172,.15)}
+html[data-theme="dark"] .filter.active,html[data-theme="dark"] .settings-tabs a.active{background:#43575d;color:#fff;border-color:#43575d}
+html[data-theme="dark"] .nav-link.current{background:#2a3c43}
+html[data-theme="dark"] .box-heading,html[data-theme="dark"] .channel-row,html[data-theme="dark"] .activity,html[data-theme="dark"] .info-row,html[data-theme="dark"] .version-row,html[data-theme="dark"] .caption-editor,html[data-theme="dark"] .settings-section,html[data-theme="dark"] .form-footer{border-color:var(--border)}
+html[data-theme="dark"] .asset-preview-stage{background-color:#28343a;background-image:none}
+html[data-theme="dark"] .asset-preview-missing,html[data-theme="dark"] .asset-state,html[data-theme="dark"] .section-tag{background:#29373c;color:#b4c4c7;border-color:#3b4b51}
+html[data-theme="dark"] .asset-state-ready{background:#19382d;color:#8be1b6;border-color:#356750}
+html[data-theme="dark"] .settings-home-card:hover{background:#223137;border-color:#547074}
+html[data-theme="dark"] .notice.success{background:#19372c;color:#95e4b6}
+html[data-theme="dark"] .notice.error,html[data-theme="dark"] .inline-error{background:#402725;color:#ffc1b6}
+html[data-theme="dark"] .status.success{background:#18372d;color:#84dcaf}
+html[data-theme="dark"] .status.danger{background:#442a29;color:#ffad9b}
+html[data-theme="dark"] .status.warn{background:#443723;color:#ffd18b}
+html[data-theme="dark"] .status.info{background:#203a53;color:#b2d6ff}
+html[data-theme="dark"] .status.muted{background:#2a383e;color:#b1c0c5}
+html[data-theme="dark"] .btn-dark{background:#405860;color:#fff}
+html[data-theme="dark"] .btn-dark:hover{background:#536e78;color:#fff}
+html[data-theme="dark"] .btn-subtle:hover,html[data-theme="dark"] .settings-tabs a:hover{background:#304249;color:#fff}
+html[data-theme="dark"] .hero-card,html[data-theme="dark"] .review-banner{background:#0f1c22}
+html[data-theme="dark"] .telegram-operation{background:#203645;color:#d9e9f4;border-color:#375464}
+html[data-theme="dark"] .telegram-operation small,html[data-theme="dark"] .telegram-status-check small{color:#a1b9c7}
+html[data-theme="dark"] .telegram-identity,html[data-theme="dark"] .step-current,html[data-theme="dark"] .tg-api-config{background:#223137;border-color:var(--border)}
+html[data-theme="dark"] .auth-body{background:#10191f}
+html[data-theme="dark"] .auth-scene{background:#1b292f}
+html[data-theme="dark"] .auth-right,html[data-theme="dark"] .auth-box{background:#1b292f;color:#eff6f7}
+html[data-theme="dark"] .auth-box p{color:#b3c3c8}
+html[data-theme="dark"] .auth-intro{background:#101a20}
+html[data-theme="dark"] .file-drop:hover{border-color:#80ab9f}
+html[data-theme="dark"] .channel-icon{background:#203c4d;color:#80c5ed}
+html[data-theme="dark"] .progress-track{background:#2e4147}
+html[data-theme="dark"] .ocr-block{color:#c3d3d6}
+html[data-theme="dark"] .theme-choice select{background:#233238;color:#e8f0f0;border-color:#42545a}
+html[data-theme="light"] { color-scheme:light; }
+.theme-choice{display:flex;align-items:center;gap:8px;font-size:11px;color:#7b8d91;font-weight:700}
+.theme-choice select{font:600 11px/1.5 Arial,sans-serif;padding:7px 9px;min-width:91px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer}
+.theme-choice select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:650px){.theme-choice span{display:none}.theme-choice select{min-width:82px;padding:6px 8px}}

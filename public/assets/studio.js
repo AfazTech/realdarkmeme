@@ -1,4 +1,34 @@
 'use strict';
+// The user's choice stays in browser storage. System follows OS changes automatically.
+(function(){
+  const selectId='themePreference', storageKey='rdm.theme';
+  const media=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+  const getPreference=()=>{
+    try {
+      const value=localStorage.getItem(storageKey);
+      return ['light','dark','system'].includes(value)?value:'system';
+    } catch (_){return 'system';}
+  };
+  const apply=()=>{
+    const preference=getPreference();
+    const actual=preference==='system'?(media?.matches?'dark':'light'):preference;
+    document.documentElement.dataset.theme=actual;
+    document.documentElement.style.colorScheme=actual;
+    const input=document.getElementById(selectId);
+    if(input)input.value=preference;
+  };
+  document.addEventListener('DOMContentLoaded',()=>{
+    const input=document.getElementById(selectId);
+    if(input){input.value=getPreference();input.addEventListener('change',()=>{
+      if(!['light','dark','system'].includes(input.value))return;
+      try{localStorage.setItem(storageKey,input.value);}catch(_){}
+      apply();
+    });}
+    apply();
+  });
+  if(media){if(media.addEventListener)media.addEventListener('change',apply);
+    else if(media.addListener)media.addListener(apply);}
+})();
 document.addEventListener('DOMContentLoaded', function(){
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('mobileBackdrop');

@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController,SenderController,SecurityController};
+use App\Http\Controllers\{AuthController,DashboardController,VideoController,ChannelController,SettingsController,PublicationController,TelegramController,SenderController,SecurityController,QueueMonitorController};
 
 Route::middleware(['admin.ip','guest'])->group(function(){
  Route::get('/login',[AuthController::class,'show'])->name('login');
@@ -9,6 +9,7 @@ Route::middleware(['admin.ip','guest'])->group(function(){
 Route::middleware(['admin.ip','auth'])->group(function(){
  Route::post('/logout',[AuthController::class,'logout'])->name('logout');
  Route::get('/',[DashboardController::class,'index'])->name('dashboard');
+ Route::get('/queues',[QueueMonitorController::class,'index'])->name('queues.index');
  Route::get('/videos',[VideoController::class,'index'])->name('videos.index');
  Route::get('/videos/{video}',[VideoController::class,'show'])->name('videos.show');
  Route::post('/videos/{video}/caption',[VideoController::class,'caption'])->name('videos.caption');

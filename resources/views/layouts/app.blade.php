@@ -3,7 +3,21 @@
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#161c22"><title>@yield('title','Dashboard') | RealDarkMeme</title>
- <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.6' }}">
+ <link rel="stylesheet" href="{{ asset('assets/studio.css').'?v=2.7' }}">
+ <link rel="stylesheet" href="{{ asset('assets/theme.css').'?v=2.7' }}">
+ <script>
+ (function () {
+   try {
+     var preference=localStorage.getItem('rdm.theme')||'system';
+     if (!['light','dark','system'].includes(preference)) preference='system';
+     var dark=window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+     document.documentElement.setAttribute('data-theme',preference==='system'?(dark?'dark':'light'):preference);
+     document.documentElement.style.colorScheme=preference==='dark'||(preference==='system'&&dark)?'dark':'light';
+   } catch (_) {
+     document.documentElement.setAttribute('data-theme','light');
+   }
+ })();
+ </script>
 </head>
 <body class="studio">
 <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -22,13 +36,14 @@
 </svg>
 <div class="shell" id="appShell">
  <aside class="sidebar" id="sidebar">
-  <div class="brand"><span class="brand-mark"><span>R</span><i></i></span><span class="brand-copy"><b>REALDARKMEME</b><small>CONTENT STUDIO <span class="ver">/ 2.6</span></small></span></div>
+  <div class="brand"><span class="brand-mark"><span>R</span><i></i></span><span class="brand-copy"><b>REALDARKMEME</b><small>CONTENT STUDIO <span class="ver">/ 2.7</span></small></span></div>
   <div class="sidebar-sep"></div>
   <div class="nav-heading">WORKSPACE</div>
   <nav class="side-nav" aria-label="Main navigation">
    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard')?'current':'' }}"><svg class="ico"><use href="#i-grid"/></svg> Dashboard</a>
    <a href="{{ route('videos.index') }}" class="nav-link {{ request()->routeIs('videos.*')?'current':'' }}"><svg class="ico"><use href="#i-play"/></svg> Video Library</a>
    <a href="{{ route('channels.index') }}" class="nav-link {{ request()->routeIs('channels.*')?'current':'' }}"><svg class="ico"><use href="#i-layers"/></svg> Source Channels</a>
+   <a href="{{ route('queues.index') }}" class="nav-link {{ request()->routeIs('queues.*')?'current':'' }}"><svg class="ico"><use href="#i-clock"/></svg> Queue Monitor</a>
   </nav>
   <div class="nav-heading second">CONNECTIONS &amp; DELIVERY</div>
   <nav class="side-nav">
@@ -49,7 +64,7 @@
   </div>
  </aside>
  <div class="workarea">
-  <header class="topbar"><div class="topbar-start"><button type="button" id="mobileMenu" class="icon-button hamburger" aria-label="Open navigation"><svg class="ico"><use href="#i-menu"/></svg></button><div class="breadcrumb">Studio <span>/</span> <strong>@yield('title','Dashboard')</strong></div></div><div class="top-actions"><span class="top-date">{{ now()->format('M d, Y') }}</span><span class="top-chip"><i></i> REALDARKMEME</span></div></header>
+  <header class="topbar"><div class="topbar-start"><button type="button" id="mobileMenu" class="icon-button hamburger" aria-label="Open navigation"><svg class="ico"><use href="#i-menu"/></svg></button><div class="breadcrumb">Studio <span>/</span> <strong>@yield('title','Dashboard')</strong></div></div><div class="top-actions"><label class="theme-choice" for="themePreference"><span>Theme</span><select id="themePreference" aria-label="Color theme preference"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label><span class="top-date">{{ now()->format('M d, Y') }}</span><span class="top-chip"><i></i> REALDARKMEME</span></div></header>
   <main class="content">
    @if(session('ok'))<div class="notice success"><svg class="ico"><use href="#i-check"/></svg>{{ session('ok') }}</div>@endif
    @if($errors->any())<div class="notice error"><strong>Could not complete the request:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
