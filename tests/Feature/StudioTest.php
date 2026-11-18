@@ -31,11 +31,13 @@ class StudioTest extends TestCase
         Storage::fake('private');
         $admin=User::create(['username'=>'admin','password'=>'secret']);
         $this->actingAs($admin)->get(route('settings.index'))
+            ->assertOk()->assertSee('Media Assets');
+        $this->actingAs($admin)->get(route('settings.media'))
             ->assertOk()->assertSee('No image configured yet');
         // A tiny PNG fixture; previews never expose a public storage path.
         $png=base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==');
         Storage::disk('private')->put('assets/thumbnail.png',$png);
-        $this->actingAs($admin)->get(route('settings.index'))
+        $this->actingAs($admin)->get(route('settings.media'))
             ->assertOk()->assertSee('Configured')->assertSee(route('settings.assets.preview','thumbnail').'?v=',false);
         $this->get(route('settings.assets.preview','thumbnail'))
             ->assertOk()->assertHeader('Content-Type','image/png');
@@ -77,7 +79,10 @@ class StudioTest extends TestCase
         $this->actingAs($admin)->get(route('settings.index'))
             ->assertOk()->assertSee('Studio Settings')->assertDontSee('Bot token');
         $this->actingAs($admin)->get(route('settings.general'))
-            ->assertOk()->assertSee('App Settings')->assertSee('Senders')->assertSee('Default hashtags');
+            ->assertOk()->assertSee('App Settings')->assertSee('Senders')->assertSee('Caption Defaults');
+        $this->actingAs($admin)->get(route('settings.captions'))->assertOk()->assertSee('Default hashtags');
+        $this->actingAs($admin)->get(route('senders.index'))->assertOk()->assertSee('Add Telegram Sender');
+        $this->actingAs($admin)->get(route('settings.security'))->assertOk()->assertSee('Allowed admin IP addresses');
         $this->actingAs($admin)->get(route('telegram.index'))
             ->assertOk()->assertSee('Phone number')->assertSee('Telegram API credentials');
     }
@@ -271,6 +276,74 @@ class StudioTest extends TestCase
         } catch (\Illuminate\Validation\ValidationException $exception) {
             $this->assertArrayHasKey('title_font',$exception->errors());
         }
+    }
+
+
+    public function test_settings_sections_are_independent(): void
+    {
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $original=RenderSettings::current();
+        $this->actingAs($admin)->get(route('settings.group','watermark'))->assertOk()->assertSee('Watermark Settings');
+        $this->actingAs($admin)->get(route('settings.group','cover'))->assertOk()->assertSee('Cover Settings');
+        $this->actingAs($admin)->post(route('settings.group.save','cover'),[
+            'settings'=>['font_size'=>'93','title_font'=>''],
+        ])->assertSessionHas('ok')->assertSessionHasNoErrors();
+        $saved=RenderSettings::current();
+        $this->assertSame(93,$saved['font_size']);
+        $this->assertSame('',$saved['title_font']);
+        $this->assertSame($original['watermark_size'],$saved['watermark_size']);
+        $this->assertSame($original['outro_enabled'],$saved['outro_enabled']);
+        $this->actingAs($admin)->post(route('settings.group.save','cover'),[
+            'settings'=>['watermark_size'=>12],
+        ])->assertSessionHasErrors('settings');
+        $this->assertSame($original['watermark_size'],RenderSettings::current()['watermark_size']);
+    }
+
+    public function test_admin_ip_allowlist_checks_current_ip_before_enabling(): void
+    {
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        $this->withServerVariables(['REMOTE_ADDR'=>'192.0.2.40']);
+        $this->actingAs($admin)->post(route('settings.security.allowlist'),[
+            'enabled'=>'1','ips'=>'203.0.113.10','current_password'=>'secret',
+        ])->assertSessionHasErrors('ips');
+        $this->assertSame('',Setting::fetch('admin_ip_allowlist',''));
+        $this->actingAs($admin)->post(route('settings.security.allowlist'),[
+            'enabled'=>'1','ips'=>"192.0.2.0/24\n2001:db8::/64",
+            'current_password'=>'secret',
+        ])->assertSessionHas('ok')->assertSessionHasNoErrors();
+        $this->assertStringContainsString('192.0.2.0/24',(string)Setting::fetch('admin_ip_allowlist'));
+        $this->withServerVariables(['REMOTE_ADDR'=>'192.0.2.123']);
+        $this->get(route('login'))->assertOk();
+        $this->withServerVariables(['REMOTE_ADDR'=>'198.51.100.11']);
+        $this->get(route('login'))->assertForbidden();
+        $this->get(route('dashboard'))->assertForbidden();
+    }
+
+    public function test_admin_can_disable_ip_allowlist_with_password(): void
+    {
+        $admin=User::create(['username'=>'admin','password'=>'secret']);
+        Setting::store('admin_ip_allowlist','127.0.0.1');
+        $this->actingAs($admin)->withServerVariables(['REMOTE_ADDR'=>'127.0.0.1']);
+        $this->post(route('settings.security.allowlist'),[
+            'enabled'=>'0','ips'=>'127.0.0.1','current_password'=>'wrong',
+        ])->assertSessionHasErrors('current_password');
+        $this->assertSame('127.0.0.1',Setting::fetch('admin_ip_allowlist'));
+        $this->post(route('settings.security.allowlist'),[
+            'enabled'=>'0','ips'=>'127.0.0.1','current_password'=>'secret',
+        ])->assertSessionHas('ok');
+        $this->assertSame('',Setting::fetch('admin_ip_allowlist'));
+    }
+
+    public function test_admin_ip_matching_supports_ipv4_and_ipv6_cidr(): void
+    {
+        $allow=\App\Support\AdminIpAllowlist::class;
+        $this->assertTrue($allow::matches('192.0.2.0/24','192.0.2.254'));
+        $this->assertFalse($allow::matches('192.0.2.0/24','192.0.3.1'));
+        $this->assertTrue($allow::matches('2001:db8::/64','2001:db8::beef'));
+        $this->assertFalse($allow::matches('2001:db8::/64','2001:db8:1::1'));
+        $this->assertFalse($allow::valid('0.0.0.0/0'));
+        $this->assertFalse($allow::valid('::/0'));
+        $this->assertFalse($allow::valid('example.com'));
     }
 
 }
